@@ -1530,9 +1530,6 @@ namespace Microsoft.SharePoint.Client
                         if (totalBytesRead == stream.Length)
                         {
                             last = true;
-                            // Copy to a new buffer that has the correct size.
-                            lastBuffer = new byte[bytesRead];
-                            Array.Copy(buffer, 0, lastBuffer, 0, bytesRead);
                         }
 
                         if (first)
@@ -1548,7 +1545,7 @@ namespace Microsoft.SharePoint.Client
                                 uploadFile = folder.Files.AddUsingPath(decodedfileName, fileCollectionAddParameters, contentStream);
 
                                 // Start upload by uploading the first slice.
-                                using (MemoryStream s = new MemoryStream(buffer))
+                                using (MemoryStream s = new MemoryStream(buffer, 0, bytesRead))
                                 {
                                     Log.Debug(Constants.LOGGING_SOURCE, "Creating file with name '{0}'", decodedfileName);
                                     // Call the start upload method on the first slice.
@@ -1569,7 +1566,7 @@ namespace Microsoft.SharePoint.Client
                             if (last)
                             {
                                 // Is this the last slice of data?
-                                using (MemoryStream s = new MemoryStream(lastBuffer))
+                                using (MemoryStream s = new MemoryStream(buffer, 0, bytesRead))
                                 {
                                     // End sliced upload by calling FinishUpload.
                                     uploadFile = uploadFile.FinishUpload(uploadId, fileoffset, s);
@@ -1578,7 +1575,7 @@ namespace Microsoft.SharePoint.Client
                             }
                             else
                             {
-                                using (MemoryStream s = new MemoryStream(buffer))
+                                using (MemoryStream s = new MemoryStream(buffer, 0, bytesRead))
                                 {
                                     // Continue sliced upload.
                                     bytesUploaded = uploadFile.ContinueUpload(uploadId, fileoffset, s);
